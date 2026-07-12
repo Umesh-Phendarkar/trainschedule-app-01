@@ -1,4 +1,4 @@
-name: CI-CD Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,14 +6,13 @@ on:
       - main
 
 jobs:
-
-  build:
+  deploy:
 
     runs-on: ubuntu-latest
 
     steps:
 
-    - name: Checkout
+    - name: Checkout Repository
       uses: actions/checkout@v4
 
     - name: Setup Node
@@ -24,13 +23,10 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
-    - name: Run Tests
+    - name: Run Unit Tests
       run: npm test
 
-    - name: Build Application
-      run: npm run build
-
-    - name: Login DockerHub
+    - name: Login to DockerHub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
@@ -39,7 +35,7 @@ jobs:
     - name: Build Docker Image
       run: |
         docker build \
-        -t ${{ secrets.DOCKER_USERNAME }}/train-schedule:${{ github.sha }} .
+          -t ${{ secrets.DOCKER_USERNAME }}/train-schedule:${{ github.sha }} .
 
     - name: Push Docker Image
       run: |
@@ -51,15 +47,14 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
-
         script: |
           docker pull ${{ secrets.DOCKER_USERNAME }}/train-schedule:${{ github.sha }}
 
           docker stop train-schedule || true
-
           docker rm train-schedule || true
 
           docker run -d \
-          --name train-schedule \
-          -p 80:3000 \
-          ${{ secrets.DOCKER_USERNAME }}/train-schedule:${{ github.sha }}
+            --restart always \
+            --name train-schedule \
+            -p 80:3000 \
+            ${{ secrets.DOCKER_USERNAME }}/train-schedule:${{ github.sha }}
