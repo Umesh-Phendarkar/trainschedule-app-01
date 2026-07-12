@@ -5,13 +5,21 @@ This is a simple train schedule app written using nodejs. It is intended to be u
 Your CI/CD pipeline is Follows Above Process:
 
 Checkout source.
+
 Install dependencies.
+
 Run tests.
+
 Build Docker image.
+
 Push image to Docker Hub.
+
 SSH to EC2.
+
 Pull the new image.
+
 Replace the running container.
+
 Serve the application on port 80.
 
 
